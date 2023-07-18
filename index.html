@@ -1,0 +1,252 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>2 Column - fw-21-2-col</title>
+<meta http-equiv="Content-Type" content="text/html; charset="utf-8"" />
+<link rel="stylesheet" type="text/css" href="styles.css" />
+  <!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+</head>
+<body>
+<!-- Begin Wrapper -->
+<div id="wrapper">
+  <!-- Begin Faux -->
+  <div id="faux">
+    <!-- Begin Left Column -->
+    <div id="leftcolumn">
+      <h2>G20 CO2 Emissions vs GDP Growth Rate for 2019</h2>
+      <br>
+      <h5>Scatter plot Showing Average CO2 Emissions in Kt vs Annual GDP Growth rate for 2019</h5>
+      <br>
+      <div class="left-subcolumn">
+      <div id="my_dataviz"></div>
+  </div>
+    </div>
+
+    <!-- End Left Column -->
+    <!-- Begin Right Column -->
+    <div id="rightcolumn">
+      <p style="margin:8px 0;">The correlation between GDP growth and CO2 emissions among the G20 countries reveals an intriguing relationship that warrants careful examination.</p>
+      <br>
+      <p><b> A scatter plot depicting this connection showcases the intricate interplay between economic progress and environmental impact.</b></p>
+      <br>
+      <p> As the G20 countries experienced higher GDP growth rates, the corresponding CO2 emissions tended to increase, forming a positively sloped scatter plot. This observation suggests that economic expansion and carbon emissions are interconnected, necessitating innovative strategies to strike a balance between sustainable development and environmental stewardship.</p>
+      <br>
+      <p>Delving deeper into the scatter plot's implications, it becomes evident that the correlation between GDP growth and CO2 emissions is strongly influenced by countries with substantial carbon footprints, such as <b>China </b> and <b>India</b>.  </p>
+      <br>
+      <p>Transitioning to the next slide in the link, it is essential to explore the GDP growth ranking across various years since 2000 for the top five CO2 emitting countries within the G20. </p>
+      <br>
+
+      <p>Note: We have sliced the data for the sake of this project using R library to make the data load easier as per the slide.<sup>[1]</sup></p>
+
+<ol style="margin:0 0 15px 0; padding:0; list-style-type:none;">
+    <li style="margin-right:15px; display:inline;"><a href="https://databank.worldbank.org/source/world-development-indicators">Source of Data</a></li>
+</ol>
+
+<p style="font-size: 0.8em;"><sup>[1]</sup> Data sourced from <a href="https://databank.worldbank.org/source/world-development-indicators">World Development Indicators</a></p>
+<p style="font-size: 0.8em;"> CS 416: Narrative Visualisation Project -Soumya Nanda </p>
+
+<br>
+        <a href="Scene2.html">
+    <button class="next-button">Next</button>
+  </a>
+  </a>
+  </a>
+    </div>
+    <!-- End Right Column -->
+    <div class="clear"> </div>
+  </div>
+  <!-- End Faux -->
+</div>
+<!-- End Wrapper -->
+</body>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 30, bottom: 30, left: 60},
+    width = 400 - margin.left - margin.right,
+    height =400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+d3.csv("https://raw.githubusercontent.com/srnanda2/DataViz/main/Overview_data.csv", function(data) {
+
+  // Add X axis
+  var x = d3.scaleLinear()
+    .domain([-3, 7])
+    .range([ 0, width ]);
+  svg.append("g")
+    .attr("transform", "translate(0," + height + ")")
+    .call(d3.axisBottom(x));
+
+  // Add Y axis
+  var y = d3.scaleLog()
+    .domain([1000, 100000000])
+    .range([ height, 0]);
+  svg.append("g")
+    .call(d3.axisLeft(y).ticks(5));
+
+  // Add X axis label:
+svg.append("text")
+  .attr("text-anchor", "end")
+  .attr("x", width)
+  .attr("y", height + margin.top + 20)
+  .text("Annual GDP Growth %")
+  .attr("class", "axis-label");
+
+// Y axis label:
+svg.append("text")
+  .attr("text-anchor", "end")
+  .attr("transform", "rotate(-90)")
+  .attr("y", -margin.left + 20)
+  .attr("x", -margin.top)
+  .text("Avg CO2 Emissions Kt (Log)")
+  .attr("class", "axis-label");
+
+svg.append("line")
+  .attr("x1", 0)
+  .attr("y1", y(1e6))
+  .attr("x2", width)
+  .attr("y2", y(1e6))
+  .style("stroke", "orange")
+  .style("stroke-dasharray", "5,5");
+
+
+  // Color scale: give me an income group name, I return a color
+  var color = d3.scaleOrdinal()
+    .domain(["Lower middle income", "Upper middle income", "High income"  ])
+    .range([ "#402D54", "#D18975", "#8FD175"])
+
+
+  // Add a tooltip div. Here I define the general feature of the tooltip: stuff that do not depend on the data point.
+  // Its opacity is set to 0: we don't see it by default.
+  var tooltip = d3.select("#my_dataviz")
+    .append("div")
+    .style("opacity", 0)
+    .attr("class", "tooltip")
+    .style("background-color", "white")
+    .style("border", "solid")
+    .style("border-width", "1px")
+    .style("border-radius", "5px")
+    .style("padding", "10px")
+
+
+
+  // A function that change this tooltip when the user hover a point.
+  // Its opacity is set to 1: we can now see it. Plus it set the text and position of tooltip depending on the datapoint (d)
+  var mouseover = function(d) {
+    tooltip
+      .style("opacity", 1)
+  }
+
+  var mousemove = function(d) {
+    tooltip
+      .html("" + d.Country)
+      .style("left", d3.event.pageX + "px")// It is important to put the +90: other wise the tooltip is exactly where the point is an it creates a weird effect
+      .style("top", d3.event.pageY + "px");
+  }
+
+
+
+  // A function that change this tooltip when the leaves a point: just need to set opacity to 0 again
+  var mouseleave = function(d) {
+    tooltip
+      .transition()
+      .duration(200)
+      .style("opacity", 0)
+  }
+
+  // Add dots
+  svg.append('g')
+    .selectAll("dot")
+    .data(data.filter(function(d,i){return i<50})) // the .filter part is just to keep a few dots on the chart, not all of them
+    .enter()
+    .append("circle")
+      .attr("cx", function (d) { return x(d.AnnualGDPGrowthpct); } )
+      .attr("cy", function (d) { return y(d.AvgCO2emissionskt); } )
+      .attr("r", 7)
+      .style("fill", function (d) { return color(d.Cat) } )
+      .style("opacity", 0.8)
+      .style("stroke", "white")
+    .on("mouseover", mouseover )
+    .on("mousemove", mousemove )
+    .on("mouseleave", mouseleave )
+svg.append('g')
+  .selectAll("text")
+  .data(data.filter(function(d,i){return i<50 && d.AvgCO2emissionskt > 1e6; })) // filter the data based on condition
+  .enter()
+  .append("text")
+    .attr("x", function (d) { return x(d.AnnualGDPGrowthpct) + 10; } )
+    .attr("y", function (d) { return y(d.AvgCO2emissionskt) + 5; } )
+    .text(function (d) { return d.Country; } )
+    .attr("class", "data-label");
+// Define the legend data
+var legendData = ["Lower middle income", "Upper middle income", "High income"];
+
+// Calculate the legend width and height
+var legendWidth = 100;
+var legendHeight = legendData.length * 20;
+
+// Add a legend group
+var legend = svg.append("g")
+  .attr("class", "legend")
+  .attr("transform", "translate(10, 10)");
+
+// Add circles and text for each legend item
+var legendItems = legend.selectAll(".legend-item")
+  .data(legendData)
+  .enter().append("g")
+  .attr("class", "legend-item")
+  .attr("transform", function(d, i) {
+    return "translate(0," + (i * 20) + ")";
+  });
+
+legendItems.append("circle")
+  .attr("cx", 5)
+  .attr("cy", 5)
+  .attr("r", 7)
+  .style("fill", function(d) {
+    return color(d);
+  });
+
+legendItems.append("text")
+  .attr("x", 20)
+  .attr("y", 9)
+  .text(function(d) {
+    return d;
+  })
+  .attr("class", "legend-text");
+
+var dashedLine = legend.append("g")
+  .attr("class", "legend-item")
+  .attr("transform", "translate(0," + (legendData.length * 20) + ")");
+
+dashedLine.append("line")
+  .attr("x1", 5)
+  .attr("y1", 5)
+  .attr("x2", 30)
+  .attr("y2", 5)
+  .style("stroke", "orange")
+  .style("stroke-dasharray", "5,5");
+
+dashedLine.append("text")
+  .attr("x", 40)
+  .attr("y", 9)
+  .text("Higher Climate Impact")
+  .attr("class", "legend-text");
+
+})
+
+</script>
+
+
+</html>

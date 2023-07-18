@@ -137,7 +137,14 @@ function update(selectedVar) {
   .attr("x", -margin.top)
   .text("Annual GDP Growth %")
   .attr("class", "axis-label");
-
+Add line
+svg.append("line")
+  .attr("x1", 0)
+  .attr("y1", y(0.04))
+  .attr("x2", width)
+  .attr("y2", y(0.04))
+  .style("stroke", "orange")
+  .style("stroke-dasharray", "5,5");
 
 
     // Color scale: give me an income group name, I return a color

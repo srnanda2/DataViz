@@ -1,0 +1,230 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>2 Column - fw-21-2-col</title>
+<meta http-equiv="Content-Type" content="text/html; charset="utf-8"" />
+<link rel="stylesheet" type="text/css" href="styles.css" />
+  <!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+</head>
+<body>
+<!-- Begin Wrapper -->
+<div id="wrapper">
+  <!-- Begin Faux -->
+  <div id="faux">
+    <!-- Begin Left Column -->
+    <div id="leftcolumn">
+      <h3>Could rapid change in certain attributes contribute to CO2 Emissions</h3>
+      <br>
+      <h5>Lets have a look at trends for India and China?</h5>
+      <br>
+       <p>Choose from the dropdown</p>
+      <br>
+    <!-- Initialize a select button -->
+     <select id="selectButton"></select>
+
+      <div class="left-subcolumn">
+      <div id="my_dataviz"></div>
+  </div>
+    </div>
+
+    <!-- End Left Column -->
+    <!-- Begin Right Column -->
+    <div id="rightcolumn">
+      <p style="margin:8px 0;">Nullaet ligula ut ant elit sed condiment elit quis urna laoreet. Fringpor aliquam justo dui nec morbi sed diculis ipsum elit temportis. Ultrisiacus ut curabitae orci nulla curabitur leo nunc lor sapien ligula. Diamquis sagittitor quat vitae leo ipsum id vivamus sodalesuada por gravida. Sedet rutrum pellus tellus vel nonummy tincidunt urna purus malestibulum adipis.</p>
+      <ul style="margin:0 0 15px 0; padding:0; list-style-type:none;">
+        <li style="margin-right:15px; display:inline;"><a href="#">Free CSS Templates</a></li>
+        <li style="margin-right:15px; display:inline;"><a href="#">Code Sucks</a></li>
+      </ul>
+        <a href="Scene2.html">
+    <button class="next-button">Previous</button>
+  </a>
+        <a href="index.html">
+    <button class="next-button">Restart</button>
+  </a>
+
+    </div>
+    <!-- End Right Column -->
+    <div class="clear"> </div>
+  </div>
+  <!-- End Faux -->
+</div>
+<!-- End Wrapper -->
+</body>
+
+<script>
+
+// set the dimensions and margins of the graph
+var margin = {top: 10, right: 20, bottom: 30, left: 80},
+    width = 400 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+d3.csv("https://raw.githubusercontent.com/srnanda2/DataViz/main/IC_data.csv", function(data) {
+
+    // List of groups (here I have one group per column)
+    var allGroup = ["CO2emissions", "Inflation", "Unemployment","Population"]
+
+    // add the options to the button
+    d3.select("#selectButton")
+      .selectAll('myOptions')
+     	.data(allGroup)
+      .enter()
+    	.append('option')
+      .text(function (d) { return d; }) // text showed in the menu
+      .attr("value", function (d) { return d; }) // corresponding value returned by the button
+
+    // A color scale: one color for each group
+    var myColor = d3.scaleOrdinal()
+      .domain("India", "China")
+      .range([ "#D18975",
+"#402D54" ]);
+
+    // Add X axis --> it is a date format
+    var x = d3.scaleLinear()
+      .domain([2000,2019])
+      .range([ 0, width ]);
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x).tickFormat(d3.format("d"))
+);
+
+ // Initialize the Y axis
+var y = d3.scaleLinear()
+  .range([ height, 0]);
+var yAxis = svg.append("g")
+  .attr("class", "myYaxis")
+
+    // A function that update the chart
+    function update(selectedGroup) {
+      var indiaGroup = "India_" + selectedGroup;
+           var chinaGroup = "China_" + selectedGroup;
+      // Create new data with the selection?
+
+      var dataFilter = data.map(function(d) {
+            return {
+               Year: d.Year,
+               [indiaGroup]: d[indiaGroup],
+               [chinaGroup]: d[chinaGroup]
+              };
+             });
+   svg.selectAll("path").remove();
+
+
+  y.domain( [d3.min(dataFilter, function(d) { return Math.min(+d[indiaGroup], +d[chinaGroup]); }),d3.max(dataFilter, function(d) { return Math.max(+d[indiaGroup], +d[chinaGroup]); })
+])
+yAxis.transition().duration(1000).call(d3.axisLeft(y));
+
+
+    svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x).tickFormat(d3.format("d"))
+);
+
+    // Initialize line with group a
+     svg
+    //  .enter()
+      .append("path")
+       .datum(dataFilter)
+         .transition()
+         .duration(1000)
+        .attr("d", d3.line()
+       .x(function(d) { return x(+d.Year) })
+            .y(function(d) { return y(+d[indiaGroup]) })
+        )
+        .attr("stroke", function(d){ return myColor("India") })
+        .style("stroke-width", 4)
+        .style("fill", "none")
+     svg
+      //      .enter()
+       .datum(dataFilter)
+      .append("path")
+        .transition()
+        .duration(1000)
+        .attr("d", d3.line()
+        .x(function(d) { return x(+d.Year) })
+            .y(function(d) { return y(+d[chinaGroup]) })
+        )
+        .attr("stroke", function(d){ return myColor("China") })
+        .style("stroke-width", 4)
+        .style("fill", "none")
+
+
+// Create a legend
+var legend = svg.append("g")
+  .attr("class", "legend")
+  .attr("transform", "translate(" + (10) + "," + (margin.top + 10) + ")");
+
+// Add legend elements
+var legendRectSize = 18;
+var legendSpacing = 6;
+
+// Add legend for India
+var indiaLegend = legend.append("g")
+  .attr("class", "legend-item")
+  .attr("transform", "translate(0, 0)");
+
+indiaLegend.append("line")
+  .attr("x1", 0)
+  .attr("y1", legendRectSize / 2)
+  .attr("x2", legendRectSize)
+  .attr("y2", legendRectSize / 2)
+  .attr("stroke", myColor("India"))
+  .attr("stroke-width", 4)
+  .attr("fill", "none");
+
+indiaLegend.append("text")
+  .attr("x", legendRectSize + legendSpacing)
+  .attr("y", legendRectSize / 2)
+  .attr("dy", "0.35em")
+  .text("India");
+
+// Add legend for China
+var chinaLegend = legend.append("g")
+  .attr("class", "legend-item")
+  .attr("transform", "translate(0, " + (legendRectSize + legendSpacing) + ")");
+
+chinaLegend.append("line")
+  .attr("x1", 0)
+  .attr("y1", legendRectSize / 2)
+  .attr("x2", legendRectSize)
+  .attr("y2", legendRectSize / 2)
+  .attr("stroke", myColor("China"))
+  .attr("stroke-width", 4)
+  .attr("fill", "none");
+
+chinaLegend.append("text")
+  .attr("x", legendRectSize + legendSpacing)
+  .attr("y", legendRectSize / 2)
+  .attr("dy", "0.35em")
+  .text("China");
+
+    }
+
+
+
+
+    // When the button is changed, run the updateChart function
+    d3.select("#selectButton").on("change", function(d) {
+        // recover the option that has been chosen
+        var selectedOption = d3.select(this).property("value")
+        // run the updateChart function with this selected option
+        update(selectedOption)
+    })
+update('CO2emissions')
+})
+
+
+</script>
+
+
+</html>

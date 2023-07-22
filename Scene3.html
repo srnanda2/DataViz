@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>2 Column - fw-21-2-col</title>
+<meta http-equiv="Content-Type" content="text/html; charset="utf-8"" />
+<link rel="stylesheet" type="text/css" href="styles.css" />
+<!-- Load d3.js -->
+<script src="https://d3js.org/d3.v4.js"></script>
+
+</style>
+</head>
+<body>
+
+<!-- Begin Wrapper -->
+<div id="wrapper">
+  <!-- Begin Faux -->
+  <div id="faux">
+    <!-- Begin Left Column -->
+    <div id="leftcolumn">
+      <h3>Could rapid change in certain attributes contribute to CO2 Emissions</h3>
+      <br>
+      <h5>Lets have a look at trends for India and China?</h5>
+      <br>
+       <p>Choose from the dropdown</p>
+      <br>
+      <!-- Initialize a select button -->
+      <select id="selectButton"></select>
+
+      <div class="left-subcolumn">
+        <div id="my_dataviz"></div>
+        <br>
+        <p><b>Please toggle around the dropdown values in chart besides to see some historical trends and average values for India and China </b></p>
+        <p style="font-size: 0.8em;"> CO2 Emissions in kt, Inflation & Unemployment in %, Population is absolute  </p>
+      </div>
+    </div>
+
+    <!-- End Left Column -->
+    <!-- Begin Right Column -->
+    <div id="rightcolumn">
+      <br>
+      <p>Further drilling down into India and China, it is crucial to consider historical trends in population, employment rates, and the impact of inflation on their economies.</p>
+      <br>
+      <p><strong>India</strong>, with its rapidly growing population, has experienced significant challenges in providing employment opportunities for its citizens. The increasing workforce has put pressure on job creation, leading to concerns about unemployment rates and social stability.</p><br>
+      <br><p>Similarly, <strong>China</strong>, with its massive population and transition from an agrarian society to an industrial powerhouse, has faced similar employment challenges.</p>
+      <br> <p>Moreover, inflation has played a significant role in both India and China's economic landscapes. As these countries undergo rapid growth, inflationary pressures emerge, affecting the purchasing power of individuals and influencing overall economic stability. Managing inflation becomes a critical task for policymakers to ensure sustained economic development while keeping the cost of living under control.</p><br>
+      </p><br><p>Addressing these socio-economic factors alongside environmental concerns becomes imperative to achieve sustainable development and create a balanced future for these nations.</p><br>
+
+      <br>
+      <br>
+
+      <p>Note: We have sliced the data for the sake of this project using R library to make the data load easier as per the slide.<sup>[1]</sup></p>
+
+      <ol style="margin:0 0 15px 0; padding:0; list-style-type:none;">
+        <li style="margin-right:15px; display:inline;"><a href="https://databank.worldbank.org/source/world-development-indicators">Source of Data</a></li>
+      </ol>
+
+      <p style="font-size: 0.8em;"><sup>[1]</sup> Data sourced from <a href="https://databank.worldbank.org/source/world-development-indicators">World Development Indicators</a></p>
+      <p style="font-size: 0.8em;"> CS 416: Narrative Visualisation Project -Soumya Nanda </p>
+      <br>
+
+      <a href="Scene2.html">
+        <button class="next-button">Previous</button>
+      </a>
+      <a href="index.html">
+        <button class="next-button">Restart</button>
+      </a>
+
+    </div>
+    <!-- End Right Column -->
+    <div class="clear"> </div>
+  </div>
+  <!-- End Faux -->
+</div>
+<!-- End Wrapper -->
+</body>
+
+<script>
+// set the dimensions and margins of the graph
+var margin = {top:25, right: 20, bottom: 30, left: 80},
+    width = 400 - margin.left - margin.right,
+    height = 400 - margin.top - margin.bottom;
+
+// append the svg object to the body of the page
+var svg = d3.select("#my_dataviz")
+  .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+//Read the data
+d3.csv("https://raw.githubusercontent.com/srnanda2/DataViz/main/IC_data.csv", function(data) {
+
+    // List of groups (here I have one group per column)
+    var allGroup = ["CO2emissions", "Inflation", "Unemployment","Population"]
+
+    // add the options to the button
+    d3.select("#selectButton")
+      .selectAll('myOptions')
+      .data(allGroup)
+      .enter()
+      .append('option')
+      .text(function (d) { return d; }) // text showed in the menu
+      .attr("value", function (d) { return d; }) // corresponding value returned by the button
+
+    // A color scale: one color for each group
+    var myColor = d3.scaleOrdinal()
+      .domain(["China", "India"]) // Fix the domain
+      .range([ "#D18975", "#402D54" ]);
+
+
+
+    // Initialize the Y axis
+    var y = d3.scaleLinear()
+      .range([ height, 0]);
+    var yAxis = svg.append("g")
+      .attr("class", "myYaxis");
+
+    // A function that update the chart
+    function update(selectedGroup) {
+      // Remove existing legends
+  svg.selectAll(".legend").remove();
+  // Remove existing lines
+  svg.selectAll("path").remove();
+  // Remove existing average lines
+  svg.selectAll("line").remove();
+  // Remove existing axis
+  svg.selectAll(".myXaxis").remove();
+
+      var indiaGroup = "India_" + selectedGroup;
+      var chinaGroup = "China_" + selectedGroup;
+      // Create new data with the selection
+
+      var dataFilter = data.map(function(d) {
+        return {
+          Year: d.Year,
+          [indiaGroup]: +d[indiaGroup], // Convert to numeric values
+          [chinaGroup]: +d[chinaGroup], // Convert to numeric values
+        };
+      });
+
+          // Add X axis --> it is a date format
+    var x = d3.scaleLinear()
+      .domain([2000,2019])
+      .range([ 0, width ]);
+    svg.append("g")
+      .attr("class", "myXaxis") // Add class for easy removal
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x).tickFormat(d3.format("d")));
+
+      y.domain([
+        d3.min(dataFilter, function(d) { return Math.min(d[indiaGroup], d[chinaGroup]); }),
+        d3.max(dataFilter, function(d) { return Math.max(d[indiaGroup], d[chinaGroup]); })
+      ]);
+      yAxis.transition().duration(1000).call(d3.axisLeft(y));
+
+
+      // Initialize line with group a
+      var lineIndia = d3.line()
+        .x(function(d) { return x(+d.Year); })
+        .y(function(d) { return y(+d[indiaGroup]); });
+
+      var lineChina = d3.line()
+        .x(function(d) { return x(+d.Year); })
+        .y(function(d) { return y(+d[chinaGroup]); });
+
+      // Add the lines for India and China
+      svg.append("path")
+        .datum(dataFilter)
+        .transition()
+        .duration(1000)
+        .attr("d", lineIndia)
+        .attr("stroke", myColor("India"))
+        .style("stroke-width", 4)
+        .style("fill", "none");
+
+      svg.append("path")
+        .datum(dataFilter)
+        .transition()
+        .duration(1000)
+        .attr("d", lineChina)
+        .attr("stroke", myColor("China"))
+        .style("stroke-width", 4)
+        .style("fill", "none");
+
+      // Calculate average values for India and China
+      var indiaAvg = d3.mean(dataFilter, function(d) { return +d[indiaGroup]; });
+      var chinaAvg = d3.mean(dataFilter, function(d) { return +d[chinaGroup]; });
+
+      // Create dashed line for India's average value
+      svg.append("line")
+        .attr("x1", 0)
+        .attr("y1", y(indiaAvg))
+        .attr("x2", width)
+        .attr("y2", y(indiaAvg))
+        .attr("stroke", myColor("India"))
+        .attr("stroke-width", 2)
+        .style("stroke-dasharray", "4 2")
+        .style("fill", "none");
+
+      // Create dashed line for China's average value
+      svg.append("line")
+        .attr("x1", 0)
+        .attr("y1", y(chinaAvg))
+        .attr("x2", width)
+        .attr("y2", y(chinaAvg))
+        .attr("stroke", myColor("China"))
+        .attr("stroke-width", 2)
+        .style("stroke-dasharray", "4 2")
+        .style("fill", "none");
+
+      // Create a legend
+  // Create a legend
+  var legendX = margin.left-70; // Default legend position (top-left corner)
+  var legendY = -20; // Top margin
+
+  if (selectedGroup === "Unemployment") {
+    // Change the legend position to top-right corner if selectedGroup is "Unemployment"
+    legendX = width - margin.right-60;
+  }
+
+  var legend = svg.append("g")
+    .attr("class", "legend")
+    .attr("transform", "translate(" + legendX + "," + legendY + ")");
+
+      // Add legend elements
+      var legendRectSize = 12;
+      var legendSpacing = 3;
+
+      // Add legend for India
+      var indiaLegend = legend.append("g")
+        .attr("class", "legend-item")
+        .attr("transform", "translate(0, 0)");
+
+      indiaLegend.append("line")
+        .attr("x1", 0)
+        .attr("y1", legendRectSize / 2)
+        .attr("x2", legendRectSize)
+        .attr("y2", legendRectSize / 2)
+        .attr("stroke", myColor("India"))
+        .attr("stroke-width", 4)
+        .attr("fill", "none");
+
+      indiaLegend.append("text")
+        .attr("x", legendRectSize + legendSpacing)
+        .attr("y", legendRectSize / 2)
+        .attr("dy", "0.35em")
+        .text("India");
+
+      // Add legend for China
+      var chinaLegend = legend.append("g")
+        .attr("class", "legend-item")
+        .attr("transform", "translate(0, " + (legendRectSize + legendSpacing) + ")");
+
+      chinaLegend.append("line")
+        .attr("x1", 0)
+        .attr("y1", legendRectSize / 2)
+        .attr("x2", legendRectSize)
+        .attr("y2", legendRectSize / 2)
+        .attr("stroke", myColor("China"))
+        .attr("stroke-width", 4)
+        .attr("fill", "none");
+
+      chinaLegend.append("text")
+        .attr("x", legendRectSize + legendSpacing)
+        .attr("y", legendRectSize / 2)
+        .attr("dy", "0.35em")
+        .text("China");
+
+      // Add legend for India's average value
+      var indiaAvgLegend = legend.append("g")
+        .attr("class", "legend-item")
+        .attr("transform", "translate(0, " + (2 * legendRectSize + 2 * legendSpacing) + ")");
+
+      indiaAvgLegend.append("line")
+        .attr("x1", 0)
+        .attr("y1", legendRectSize / 2)
+        .attr("x2", legendRectSize)
+        .attr("y2", legendRectSize / 2)
+        .attr("stroke", myColor("India"))
+        .attr("stroke-width", 2)
+        .style("stroke-dasharray", "4 2")
+        .attr("fill", "none");
+
+      indiaAvgLegend.append("text")
+        .attr("x", legendRectSize + legendSpacing)
+        .attr("y", legendRectSize / 2)
+        .attr("dy", "0.35em")
+        .text("India Avg.");
+
+      // Add legend for China's average value
+      var chinaAvgLegend = legend.append("g")
+        .attr("class", "legend-item")
+        .attr("transform", "translate(0, " + (3 * legendRectSize + 3 * legendSpacing) + ")");
+
+      chinaAvgLegend.append("line")
+        .attr("x1", 0)
+        .attr("y1", legendRectSize / 2)
+        .attr("x2", legendRectSize)
+        .attr("y2", legendRectSize / 2)
+        .attr("stroke", myColor("China"))
+        .attr("stroke-width", 2)
+        .style("stroke-dasharray", "4 2")
+        .attr("fill", "none");
+
+      chinaAvgLegend.append("text")
+        .attr("x", legendRectSize + legendSpacing)
+        .attr("y", legendRectSize / 2)
+        .attr("dy", "0.35em")
+        .text("China Avg.");
+
+    }
+
+    // When the button is changed, run the updateChart function
+    d3.select("#selectButton").on("change", function(d) {
+      // recover the option that has been chosen
+      var selectedOption = d3.select(this).property("value")
+      // run the updateChart function with this selected option
+      update(selectedOption)
+    });
+
+    // Initialize the chart with the default option
+    update('CO2emissions');
+
+})
+</script>
+</html>
